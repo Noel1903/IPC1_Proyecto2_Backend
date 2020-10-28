@@ -53,12 +53,46 @@ def agregarUser():
     Users.append(nuevo)
     return("Se agregó el usuario")
 
-@app.route('/CargarPeliculas',methods=['POST'])
+@app.route('/CargarPeliculas/',methods=['POST'])
 def csvPeliculas():
     global Peliculas 
     nuevaP=Film(request.json['titulo'],request.json['url'],request.json['puntuacion'],request.json['duracion'],request.json['sinopsis'])
     Peliculas.append(nuevaP)
-    return("se agregaron las peliculas")
+    mensaje={
+        'mensaje':'Aceptado'
+    }
+    respuesta=jsonify(mensaje)
+    return respuesta
 
+@app.route('/TablaPeliculas/',methods=['GET'])
+def TablaPelis():
+    global Peliculas
+    pelis=[]
+    for p in Peliculas:
+        film={
+            'titulo':p.getTitulo(),
+            'url':p.getUrl(),
+            'puntuacion':p.getPuntuacion(),
+            'duracion':p.getDuracion(),
+            'sinopsis':p.getSinopsis()
+        }
+        pelis.append(film)
+    respuesta=jsonify(pelis)
+    return(respuesta)
+
+@app.route('/Cartelera/',methods=['GET'])
+def cartelera():
+    carteles=[]
+    global Peliculas
+    for pel in Peliculas:
+        cartel={
+            'titulo':pel.getTitulo(),
+            'url_img':pel.getUrl()
+        }
+        carteles.append(cartel)
+    respuesta=jsonify(carteles)
+    return (respuesta)    
+
+    
 if __name__ == "__main__":
     app.run(debug=True,port=3000)
