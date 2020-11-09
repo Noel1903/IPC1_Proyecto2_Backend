@@ -1,9 +1,10 @@
 class Usuario:
-    def __init__(self,nombre,apellido,usuario,contraseña):
+    def __init__(self,nombre,apellido,usuario,contraseña,tipo):
         self.nombre=nombre
         self.apellido=apellido
         self.usuario=usuario
         self.contraseña=contraseña
+        self.tipo=tipo
 
     def getNombre(self):
         return self.nombre
@@ -17,6 +18,9 @@ class Usuario:
     def getContraseña(self):
         return self.contraseña
 
+    def getTipo(self):
+        return self.tipo
+
     def setNombre(self,nombre):
         self.nombre=nombre
 
@@ -27,7 +31,10 @@ class Usuario:
         self.usuario=usuario
 
     def setContraseña(self,contraseña):
-        self.contraseña=contraseña  
+        self.contraseña=contraseña 
+
+    def setTipo(self,tipo):
+        self.tipo=tipo      
     
 
 

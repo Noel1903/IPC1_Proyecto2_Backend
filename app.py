@@ -5,15 +5,19 @@ from Usuarios import Usuario
 from Films import Film
 from Reseñas import Reseña
 from Funciones import Funcion
+from Asientos import Asiento
 import datetime
 import pytz
+import os
+import numpy as np
 app=Flask(__name__)
 CORS(app)
 Users=[]
 Peliculas=[]
 Reseñas=[]
 Funciones=[]
-Users.append(Usuario('Usuario','Maestro','admin','admin'))
+Asientos=[]
+Users.append(Usuario('Usuario','Maestro','admin','admin','administrador'))
 
 
 @app.route('/Obtener',methods=['GET'])
@@ -40,7 +44,9 @@ def Login():
         if usuarios.getUsuario()==user and usuarios.getContraseña()==passw:
             Mensaje={
                 'mensaje':'Correcto',
-                'usuario': usuarios.getUsuario()
+                'usuario': usuarios.getUsuario(),
+                'tipo':usuarios.getTipo()
+
             }
             break
         else:
@@ -55,9 +61,27 @@ def Login():
 @app.route('/Registrar/',methods=['POST'])
 def agregarUser():
     global Users
-    nuevo= Usuario(request.json['nombre'],request.json['apellido'],request.json['usuario'],request.json['contraseña'])
-    Users.append(nuevo)
-    return("Se agregó el usuario")
+    usuario=request.json['usuario']
+    for i in range(len(Users)):
+        if usuario!=Users[i].getUsuario():
+            nuevo= Usuario(request.json['nombre'],request.json['apellido'],request.json['usuario'],request.json['contraseña'],request.json['tipo'])
+            Users.append(nuevo)
+            mensaje={
+                'mensaje':'Correcto'
+            }
+            respuesta=jsonify(mensaje)
+        else:
+            mensaje={
+                'mensaje':'Error'
+            }
+            respuesta=jsonify(mensaje)
+            break
+
+            
+    
+    return(respuesta)
+
+
 
 @app.route('/CargarPeliculas/',methods=['POST'])
 def csvPeliculas():
@@ -84,6 +108,42 @@ def TablaPelis():
         }
         pelis.append(film)
     respuesta=jsonify(pelis)
+    return(respuesta)
+
+@app.route('/Modificar',methods=['POST'])
+def modificar():
+    titulo=request.json['titulo']
+    tituloN=request.json['tituloN']
+    url=request.json['url']
+    puntuacion=request.json['puntuacion']
+    duracion=request.json['duracion']
+    sinopsis=request.json['sinopsis']
+    global Peliculas
+    for a in range(len(Peliculas)):
+        if titulo==Peliculas[a].getTitulo():
+            Peliculas[a].setTitulo(tituloN)
+            Peliculas[a].setUrl(url)
+            Peliculas[a].setPuntuacion(puntuacion)
+            Peliculas[a].setDuracion(duracion)
+            Peliculas[a].setSinopsis(sinopsis)
+        break
+    mensaje={
+        'mensaje':'correcto'
+    }
+    respuesta=jsonify(mensaje)
+    return(respuesta)
+        
+@app.route('/Eliminar/<string:titulo>',methods=['DELETE'])
+def eliminar(titulo):
+    global Peliculas
+    for i in range(len(Peliculas)):
+        if titulo==Peliculas[i].getTitulo():
+            del Peliculas[i]
+            break
+    mensaje={
+        'mensaje':'correcto'
+    }
+    respuesta=jsonify(mensaje)
     return(respuesta)
 
 @app.route('/Cartelera/',methods=['GET'])
@@ -125,11 +185,56 @@ def verUser():
             Mensaje={
                 'nombre':usuarios.getNombre(),
                 'apellido': usuarios.getApellido(),
-                'usuario':usuarios.getUsuario()
+                'usuario':usuarios.getUsuario(),
+                'contraseña':usuarios.getContraseña()
             }
             break
     respuesta=jsonify(Mensaje)
     return respuesta          
+
+@app.route('/Recuperar',methods=['POST'])
+def recuperar():
+    global Users
+    usuario=request.json['usuario']
+    for i in range(len(Users)):
+        if usuario==Users[i].getUsuario():
+            mensaje={
+                'mensaje':'correcto',
+                'contraseña':Users[i].getContraseña()
+            }
+            break
+    respuesta=jsonify(mensaje)
+    return(respuesta)   
+
+@app.route('/Modificarperfil',methods=['POST'])
+def modificarP():
+    usuario=request.json['usuario']
+    usuarioN=request.json['usuarioN']
+    nombre=request.json['nombre']
+    apellido=request.json['apellido']
+    contraseña=request.json['contraseña']
+    global Users
+    for i in range(len(Users)):
+        if usuario==Users[i].getUsuario():
+            for a in range(len(Users)):
+                if usuarioN!=Users[a].getUsuario():
+                    Users[i].setUsuario(usuarioN)
+                    Users[i].setContraseña(contraseña)
+                    Users[i].setNombre(nombre)
+                    Users[i].setApellido(apellido)
+                    mensaje={
+                        'mensaje':'correcto'
+                    }
+                    respuesta=jsonify(mensaje)
+                else:
+                    mensaje={
+                        'mensaje':'Error'
+                    }
+                    respuesta=jsonify(mensaje)
+
+                break
+    return(respuesta)
+            
 
 @app.route('/Reseñas',methods=['POST'])
 def reseñas():
@@ -196,7 +301,43 @@ def verFunciones():
         func.append(datos)
     respuesta=jsonify(func)
     return(respuesta)
+
+@app.route('/Eliminar/<string:titulo>/<string:hora>',methods=['DELETE'])
+def eliminarF(titulo,hora):
+    global Funciones
+    for i in range(len(Funciones)):
+        if titulo==Funciones[i].getPelicula() and hora==Funciones[i].getHora():
+            del Funciones[i]
+            break
+    mensaje={
+        'mensaje':'correcto'
+    }
+    respuesta=jsonify(mensaje)
+    return(respuesta)
+
                                          
+@app.route('/Asientos',methods=['POST'])
+def asientos():
+    global Asientos
+    nuevoAs=Asiento(request.json['pelicula'],request.json['asiento'],request.json['hora'])
+    Asientos.append(nuevoAs)
+    return "Aceptado"
+   
+@app.route('/Asientos/Apartados',methods=['GET'])
+def verasientos():
+    global Asientos
+    asi=[]
+    for i in Asientos:
+        datos={
+            'pelicula':i.getPelicula(),
+            'asiento':i.getAsiento(),
+            'hora':i.getHora()
+        }
+        asi.append(datos)
+    respuesta=jsonify(asi)
+    return(respuesta)
+    
 
 if __name__ == "__main__":
-    app.run(debug=True,port=3000)
+    puerto=int(os.environ.get('PORT',3000))
+    app.run(host='0.0.0.0',port=puerto)
